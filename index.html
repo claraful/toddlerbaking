@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style>
+<title>Cocoa Pumpkin Muffins</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@600;800&display=swap">
+<style>
+/* Layout: one step per screen. Big picture tiles with big numbers, an action badge, an arrow to the result, small grown-up notes, and a thick bottom button bar. */
+:root{
+  --bg:#E6F3FF;
+  --card:#FFFFFF;
+  --ink:#3B2A1A;
+  --muted:#6B5A4A;
+  --outline:#3B2A1A;
+  --accent:#FFD93B;
+  --accent-ink:#3B2A1A;
+  --tile:#FFFFFF;
+  --tile-ink:#3B2A1A;
+  --tile-muted:#6B5A4A;
+  --good-bg:#DDF5D9;
+  --good-ink:#1F5A1A;
+  --warn-bg:#FFEBC2;
+  --warn-ink:#6A430C;
+  --dot:#B9CFE3;
+  --dot-on:#3B2A1A;
+  --font-display:"Fredoka","Trebuchet MS","Arial Rounded MT Bold",system-ui,sans-serif;
+  --font-body:"Nunito","Trebuchet MS",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#141E29;--card:#1E2B3A;--ink:#F6EEE4;--muted:#C2B5A6;--outline:#0C1219;
+    --tile:#FFF8EC;--good-bg:#1F3A22;--good-ink:#BFE8B8;--warn-bg:#40300F;--warn-ink:#FFDFA3;
+    --dot:#3A4D61;--dot-on:#FFD93B;color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#141E29;--card:#1E2B3A;--ink:#F6EEE4;--muted:#C2B5A6;--outline:#0C1219;
+  --tile:#FFF8EC;--good-bg:#1F3A22;--good-ink:#BFE8B8;--warn-bg:#40300F;--warn-ink:#FFDFA3;
+  --dot:#3A4D61;--dot-on:#FFD93B;color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-weight:600;font-size:17px;line-height:1.45;min-height:100vh}
+.wrap{max-width:640px;margin:0 auto;padding-inline:16px;padding-block:20px 8px}
+h1{font-family:var(--font-display);font-weight:600;font-size:28px;line-height:1.15;margin:0;text-align:center;text-wrap:balance}
+.sub{margin:6px 0 0;text-align:center;color:var(--muted);font-size:15px}
+.tabs{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:18px}
+.tab{font-family:var(--font-display);font-weight:600;font-size:19px;padding:10px 22px;border:3px solid var(--outline);border-radius:999px;background:var(--card);color:var(--ink);cursor:pointer}
+.tab[aria-selected="true"]{background:var(--accent);color:var(--accent-ink);box-shadow:0 3px 0 var(--outline)}
+.tab:focus-visible{outline:4px solid var(--ink);outline-offset:3px}
+.dots{display:flex;gap:7px;justify-content:center;margin:18px 0 6px;flex-wrap:wrap}
+.dots span{width:12px;height:12px;border-radius:50%;background:var(--dot)}
+.dots span.on{background:var(--dot-on);transform:scale(1.25)}
+.dots span.done{background:var(--accent);box-shadow:inset 0 0 0 2px var(--outline)}
+.count{text-align:center;color:var(--muted);font-size:14px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;margin:0 0 14px}
+.stage{display:flex;flex-direction:column;align-items:center;gap:14px}
+.stage.pop{animation:pop .22s ease-out}
+@keyframes pop{from{transform:scale(.97)}to{transform:scale(1)}}
+.tiles{display:flex;flex-wrap:wrap;gap:12px;justify-content:center}
+.tile{background:var(--tile);border:3px solid var(--outline);border-radius:22px;box-shadow:0 4px 0 var(--outline);padding:12px 14px 10px;min-width:124px;display:flex;flex-direction:column;align-items:center;gap:2px}
+.tile .row{display:flex;gap:2px}
+.pic svg{width:100%;height:100%;display:block}
+.num{font-family:var(--font-display);font-weight:600;font-size:56px;line-height:1.05;color:var(--tile-ink)}
+.unit{font-size:15px;font-weight:800;color:var(--tile-muted);text-align:center;min-height:1.3em}
+.action{display:flex;align-items:center;gap:14px}
+.badge{width:68px;height:68px;border-radius:50%;background:var(--accent);border:3px solid var(--outline);box-shadow:0 4px 0 var(--outline);display:grid;place-items:center;color:var(--accent-ink)}
+.badge svg,.down svg{width:38px;height:38px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.word{font-family:var(--font-display);font-weight:600;font-size:34px;line-height:1.1}
+.down{color:var(--muted)}
+.down svg{width:44px;height:44px;stroke-width:2.6}
+.out{width:156px;height:156px;background:var(--tile);border:3px solid var(--outline);border-radius:30px;box-shadow:0 4px 0 var(--outline);padding:8px}
+.notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-top:22px}
+.note{border-radius:16px;padding:12px 14px;min-width:0}
+.note b{display:block;font-size:13px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px}
+.note p{margin:0;font-size:16px}
+.kid{background:var(--good-bg);color:var(--good-ink)}
+.adult{background:var(--warn-bg);color:var(--warn-ink)}
+.bar{position:sticky;bottom:0;background:var(--bg);padding:12px 16px calc(14px + env(safe-area-inset-bottom,0px));display:flex;gap:12px;max-width:640px;margin:0 auto}
+.bar button{font-family:var(--font-display);font-weight:600;font-size:26px;border:3px solid var(--outline);border-radius:20px;height:68px;cursor:pointer;color:var(--accent-ink)}
+.bar button:focus-visible{outline:4px solid var(--ink);outline-offset:3px}
+#back{flex:0 0 auto;padding-inline:22px;background:var(--card);color:var(--ink)}
+#next{flex:1;background:var(--accent);box-shadow:0 4px 0 var(--outline)}
+#next:active{transform:translateY(3px);box-shadow:0 1px 0 var(--outline)}
+.pantry{margin-top:22px}
+.lead{margin:0 0 4px;text-align:center;color:var(--muted);font-size:16px}
+.group{font-family:var(--font-display);font-weight:600;font-size:22px;line-height:1.2;margin:22px 0 10px}
+.list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.item{display:flex;align-items:center;gap:12px;background:var(--card);border:3px solid var(--outline);border-radius:18px;padding:8px 14px 8px 10px;cursor:pointer;min-width:0}
+.item input{flex:none;width:26px;height:26px;accent-color:var(--dot-on);cursor:pointer}
+.thumb{flex:none;width:60px;height:60px;background:var(--tile);border-radius:14px;padding:3px}
+.what{min-width:0}
+.amt{display:block;font-family:var(--font-display);font-weight:600;font-size:22px;line-height:1.15}
+.name{display:block;font-size:16px}
+.what small{display:block;color:var(--muted);font-size:13px;font-weight:800}
+.item.done .what{text-decoration:line-through;text-decoration-thickness:2px}
+.item.done .thumb{opacity:.45}
+.equip{margin-top:22px}
+.starts{display:flex;flex-wrap:wrap;gap:12px;margin-top:22px;padding-bottom:20px}
+.start{flex:1 1 200px;font-family:var(--font-display);font-weight:600;font-size:22px;height:62px;border:3px solid var(--outline);border-radius:18px;background:var(--accent);color:var(--accent-ink);box-shadow:0 4px 0 var(--outline);cursor:pointer}
+.start.alt{background:var(--card);color:var(--ink)}
+.start:focus-visible,.item input:focus-visible{outline:4px solid var(--ink);outline-offset:3px}
+@media (prefers-reduced-motion: reduce){.stage.pop{animation:none}}
+@media (max-width:420px){.num{font-size:50px}.word{font-size:30px}h1{font-size:25px}}
+</style>
+
+</head>
+<body>
+<main class="wrap">
+  <h1>Cocoa pumpkin banana muffins</h1>
+  <p class="sub">Makes 24 · no added sugar · for you and your toddler</p>
+  <div class="tabs" role="tablist" aria-label="Recipe version">
+    <button class="tab" id="tab-list" role="tab" data-tab="list" aria-selected="true" type="button">Ingredients</button>
+    <button class="tab" id="tab-std" role="tab" data-tab="std" aria-selected="false" type="button">With eggs</button>
+    <button class="tab" id="tab-egg" role="tab" data-tab="egg" aria-selected="false" type="button">Egg-free</button>
+  </div>
+  <div class="dots" id="dots" aria-hidden="true"></div>
+  <p class="count" id="count"></p>
+  <div class="stage" id="stage" aria-live="polite"></div>
+  <section class="pantry" id="pantry" aria-label="Ingredients" hidden></section>
+  <div class="notes" id="notes">
+    <div class="note kid"><b>Toddler job</b><p id="kid"></p></div>
+    <div class="note adult"><b>Grown-up job</b><p id="adult"></p></div>
+  </div>
+</main>
+<nav class="bar" id="bar" aria-label="Recipe steps">
+  <button id="back" type="button" aria-label="Previous step">Back</button>
+  <button id="next" type="button" aria-label="Next step">Next</button>
+</nav>
+
+<script>
+function f(x,y,s){var e=7*s,r=5.5*s,p=2.6*s,w=2*Math.max(s,0.7),o='#3B2A1A';return '<circle cx="'+(x-e)+'" cy="'+y+'" r="'+r+'" fill="#fff" stroke="'+o+'" stroke-width="'+w+'"/><circle cx="'+(x+e)+'" cy="'+y+'" r="'+r+'" fill="#fff" stroke="'+o+'" stroke-width="'+w+'"/><circle cx="'+(x-e+1)+'" cy="'+(y+1)+'" r="'+p+'" fill="'+o+'"/><circle cx="'+(x+e+1)+'" cy="'+(y+1)+'" r="'+p+'" fill="'+o+'"/><circle cx="'+(x-e+2)+'" cy="'+y+'" r="'+(p*0.35)+'" fill="#fff"/><circle cx="'+(x+e+2)+'" cy="'+y+'" r="'+(p*0.35)+'" fill="#fff"/><path d="M'+(x-6*s)+' '+(y+9*s)+' Q'+x+' '+(y+16*s)+' '+(x+6*s)+' '+(y+9*s)+'" fill="none" stroke="'+o+'" stroke-width="'+(w*1.1)+'" stroke-linecap="round"/><circle cx="'+(x-13*s)+'" cy="'+(y+9*s)+'" r="'+(3*s)+'" fill="#FF8FA3" opacity="0.75"/><circle cx="'+(x+13*s)+'" cy="'+(y+9*s)+'" r="'+(3*s)+'" fill="#FF8FA3" opacity="0.75"/>';}
+function bowl(c,d){return '<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M8 44 C8 80 28 94 50 94 C72 94 92 80 92 44 Z" fill="#8EC9F5" stroke="#3B2A1A" stroke-width="3.5" stroke-linejoin="round"/><path d="M16 56 C18 68 24 76 32 82" fill="none" stroke="#D5ECFC" stroke-width="4" stroke-linecap="round"/><ellipse cx="50" cy="44" rx="42" ry="12" fill="#CFE8FB" stroke="#3B2A1A" stroke-width="3.5"/><ellipse cx="50" cy="45" rx="35" ry="8.5" fill="'+c+'" stroke="#3B2A1A" stroke-width="2"/><path d="M28 45 C38 40 46 50 56 44 C62 41 68 44 72 46" fill="none" stroke="'+d+'" stroke-width="2.5" stroke-linecap="round"/>'+f(50,68,0.85)+'</svg>';}
+function tin(c){var p=[[26,41],[50,41],[74,41],[26,61],[50,61],[74,61]],s='<svg viewBox="0 0 100 100" aria-hidden="true"><rect x="6" y="22" width="88" height="58" rx="10" fill="#D9D9D3" stroke="#3B2A1A" stroke-width="3.5"/><path d="M14 29 H86" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"/>';p.forEach(function(q){s+='<circle cx="'+q[0]+'" cy="'+q[1]+'" r="11" fill="#A8A8A0" stroke="#3B2A1A" stroke-width="2.5"/><circle cx="'+q[0]+'" cy="'+q[1]+'" r="7.5" fill="'+c+'" stroke="#3B2A1A" stroke-width="1.5"/>';});return s+'</svg>';}
+var A = {
+ banana:'<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M30 24 C28 56 48 80 80 70" fill="none" stroke="#3B2A1A" stroke-width="31" stroke-linecap="round"/><path d="M30 24 C28 56 48 80 80 70" fill="none" stroke="#FFD93B" stroke-width="24" stroke-linecap="round"/><path d="M22 30 C21 46 27 58 36 66" fill="none" stroke="#FFF3A0" stroke-width="4" stroke-linecap="round"/><rect x="24" y="4" width="13" height="16" rx="3" fill="#8A5A2B" stroke="#3B2A1A" stroke-width="3"/><circle cx="90" cy="70" r="4.5" fill="#5A3A1A"/>'+f(43,60,0.8)+'</svg>',
+ egg:'<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M50 12 C74 12 84 44 84 62 C84 82 68 92 50 92 C32 92 16 82 16 62 C16 44 26 12 50 12 Z" fill="#FFF4DC" stroke="#3B2A1A" stroke-width="3.5" stroke-linejoin="round"/><path d="M26 44 C28 32 34 24 42 20" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round"/><path d="M72 52 C77 64 74 76 64 84" fill="none" stroke="#F0D9A8" stroke-width="5" stroke-linecap="round"/>'+f(50,58,1)+'</svg>',
+ can:'<svg viewBox="0 0 100 100" aria-hidden="true"><rect x="22" y="16" width="56" height="70" rx="8" fill="#FF9A2E" stroke="#3B2A1A" stroke-width="3.5"/><path d="M40 34 C33 48 35 62 42 70 M62 34 C69 48 67 62 60 70" fill="none" stroke="#D9731A" stroke-width="2.5" stroke-linecap="round"/><rect x="22" y="16" width="56" height="12" rx="6" fill="#D9D9D3" stroke="#3B2A1A" stroke-width="3.5"/><rect x="22" y="74" width="56" height="12" rx="6" fill="#D9D9D3" stroke="#3B2A1A" stroke-width="3.5"/><path d="M29 36 V66" stroke="#FFD08A" stroke-width="4" stroke-linecap="round"/>'+f(52,50,0.95)+'</svg>',
+ pouch:'<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M26 26 H74 L78 82 Q78 90 70 90 H30 Q22 90 22 82 Z" fill="#FFF1C9" stroke="#3B2A1A" stroke-width="3.5" stroke-linejoin="round"/><rect x="40" y="8" width="20" height="20" rx="4" fill="#E8453C" stroke="#3B2A1A" stroke-width="3.5"/><path d="M26 34 H74" stroke="#F0D9A0" stroke-width="3"/><path d="M50 50 C40 42 28 52 33 66 C37 76 45 76 50 73 C55 76 63 76 67 66 C72 52 60 42 50 50 Z" fill="#E8453C" stroke="#3B2A1A" stroke-width="3" stroke-linejoin="round"/><path d="M50 50 C50 44 52 41 56 40" stroke="#5A3A1A" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M54 42 C60 34 68 38 65 44 C61 46 57 45 54 42 Z" fill="#5CB02E" stroke="#3B2A1A" stroke-width="2"/>'+f(50,62,0.7)+'</svg>',
+ milk:'<svg viewBox="0 0 100 100" aria-hidden="true"><rect x="24" y="36" width="40" height="54" fill="#FFFFFF" stroke="#3B2A1A" stroke-width="3.5" stroke-linejoin="round"/><path d="M64 36 L78 44 V90 L64 90 Z" fill="#CFE3F7" stroke="#3B2A1A" stroke-width="3.5" stroke-linejoin="round"/><path d="M24 36 L34 12 H62 L64 36 Z" fill="#6BB2F2" stroke="#3B2A1A" stroke-width="3.5" stroke-linejoin="round"/><path d="M64 36 L62 12 L74 20 L78 44 Z" fill="#4C98E0" stroke="#3B2A1A" stroke-width="3.5" stroke-linejoin="round"/><rect x="24" y="74" width="40" height="16" fill="#6BB2F2" stroke="#3B2A1A" stroke-width="3.5"/>'+f(44,54,0.9)+'</svg>',
+ oil:'<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M40 16 H60 V28 C60 34 72 38 72 50 V84 Q72 92 64 92 H36 Q28 92 28 84 V50 C28 38 40 34 40 28 Z" fill="#FFE07A" stroke="#3B2A1A" stroke-width="3.5" stroke-linejoin="round"/><rect x="36" y="4" width="28" height="14" rx="4" fill="#4CAF50" stroke="#3B2A1A" stroke-width="3.5"/><path d="M34 52 V80" stroke="#FFF6C8" stroke-width="4" stroke-linecap="round"/>'+f(50,66,0.85)+'</svg>',
+ vanilla:'<svg viewBox="0 0 100 100" aria-hidden="true"><rect x="38" y="6" width="24" height="16" rx="4" fill="#3B3B3B" stroke="#3B2A1A" stroke-width="3.5"/><path d="M42 22 H58 V32 C58 34 70 36 70 46 V84 Q70 92 62 92 H38 Q30 92 30 84 V46 C30 36 42 34 42 32 Z" fill="#9A5B2A" stroke="#3B2A1A" stroke-width="3.5" stroke-linejoin="round"/><rect x="36" y="48" width="28" height="34" rx="4" fill="#FFF3D6" stroke="#3B2A1A" stroke-width="2.5"/>'+f(50,62,0.6)+'</svg>',
+ flour:'<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M22 28 H78 L82 86 Q82 92 76 92 H24 Q18 92 18 86 Z" fill="#FFF8E8" stroke="#3B2A1A" stroke-width="3.5" stroke-linejoin="round"/><path d="M22 28 L26 12 H74 L78 28 Z" fill="#EADBB8" stroke="#3B2A1A" stroke-width="3.5" stroke-linejoin="round"/><path d="M28 20 H72" stroke="#C9B88A" stroke-width="3" stroke-dasharray="5 4"/>'+f(50,52,1)+'<g fill="#E8B23C" stroke="#3B2A1A" stroke-width="1.6"><ellipse cx="42" cy="82" rx="3" ry="5" transform="rotate(-25 42 82)"/><ellipse cx="58" cy="82" rx="3" ry="5" transform="rotate(25 58 82)"/><ellipse cx="50" cy="80" rx="3" ry="5"/></g></svg>',
+ cocoa:'<svg viewBox="0 0 100 100" aria-hidden="true"><rect x="24" y="20" width="52" height="64" rx="8" fill="#9B5A2B" stroke="#3B2A1A" stroke-width="3.5"/><rect x="22" y="10" width="56" height="14" rx="6" fill="#5A3416" stroke="#3B2A1A" stroke-width="3.5"/><rect x="30" y="30" width="6" height="36" rx="3" fill="#C98A57"/>'+f(54,48,1)+'<path d="M10 92 C18 76 34 70 50 76 C66 70 82 76 90 92 Z" fill="#7A4420" stroke="#3B2A1A" stroke-width="3.5" stroke-linejoin="round"/></svg>',
+ powder:'<svg viewBox="0 0 100 100" aria-hidden="true"><rect x="26" y="30" width="48" height="60" rx="8" fill="#FFFFFF" stroke="#3B2A1A" stroke-width="3.5"/><rect x="24" y="16" width="52" height="18" rx="6" fill="#4FA3F0" stroke="#3B2A1A" stroke-width="3.5"/><path d="M32 40 V56" stroke="#CFE3F7" stroke-width="4" stroke-linecap="round"/>'+f(52,58,0.95)+'</svg>',
+ soda:'<svg viewBox="0 0 100 100" aria-hidden="true"><rect x="26" y="30" width="48" height="60" rx="8" fill="#FFFFFF" stroke="#3B2A1A" stroke-width="3.5"/><rect x="24" y="16" width="52" height="18" rx="6" fill="#FFA21F" stroke="#3B2A1A" stroke-width="3.5"/><path d="M32 40 V56" stroke="#FFE0A8" stroke-width="4" stroke-linecap="round"/>'+f(52,58,0.95)+'</svg>',
+ cinnamon:'<svg viewBox="0 0 100 100" aria-hidden="true"><rect x="30" y="28" width="40" height="62" rx="8" fill="#D2691E" stroke="#3B2A1A" stroke-width="3.5"/><rect x="28" y="12" width="44" height="18" rx="6" fill="#D93A32" stroke="#3B2A1A" stroke-width="3.5"/><g fill="#3B2A1A"><circle cx="40" cy="21" r="2"/><circle cx="50" cy="21" r="2"/><circle cx="60" cy="21" r="2"/></g><rect x="35" y="36" width="6" height="42" rx="3" fill="#F0A060"/>'+f(52,56,0.95)+'</svg>',
+ oven:'<svg viewBox="0 0 100 100" aria-hidden="true"><rect x="10" y="8" width="80" height="84" rx="12" fill="#E0E0DA" stroke="#3B2A1A" stroke-width="3.5"/><circle cx="34" cy="26" r="10" fill="#fff" stroke="#3B2A1A" stroke-width="3"/><circle cx="66" cy="26" r="10" fill="#fff" stroke="#3B2A1A" stroke-width="3"/><circle cx="36" cy="28" r="4.5" fill="#3B2A1A"/><circle cx="68" cy="28" r="4.5" fill="#3B2A1A"/><circle cx="38" cy="26" r="1.5" fill="#fff"/><circle cx="70" cy="26" r="1.5" fill="#fff"/><rect x="20" y="44" width="60" height="40" rx="10" fill="#FF9A2E" stroke="#3B2A1A" stroke-width="3.5"/><path d="M22 70 H78" stroke="#3B2A1A" stroke-width="3"/><path d="M30 70 C30 58 46 58 46 70 Z M54 70 C54 58 70 58 70 70 Z" fill="#8B5A2B" stroke="#3B2A1A" stroke-width="2.5"/><path d="M26 52 H40" stroke="#FFD08A" stroke-width="4" stroke-linecap="round"/></svg>',
+ clock:'<svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="26" cy="20" r="10" fill="#FFD93B" stroke="#3B2A1A" stroke-width="3.5"/><circle cx="74" cy="20" r="10" fill="#FFD93B" stroke="#3B2A1A" stroke-width="3.5"/><path d="M30 84 L24 94 M70 84 L76 94" stroke="#3B2A1A" stroke-width="4" stroke-linecap="round"/><circle cx="50" cy="54" r="36" fill="#FFFFFF" stroke="#3B2A1A" stroke-width="3.5"/><path d="M50 22 V28 M50 80 V86 M18 54 H24 M76 54 H82" stroke="#3B2A1A" stroke-width="3.5" stroke-linecap="round"/><path d="M50 54 V32" stroke="#3B2A1A" stroke-width="4.5" stroke-linecap="round"/><path d="M50 54 L64 62" stroke="#3B2A1A" stroke-width="4.5" stroke-linecap="round"/><circle cx="50" cy="54" r="4.5" fill="#E8453C" stroke="#3B2A1A" stroke-width="2"/></svg>',
+ muffin:'<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M26 56 L32 90 H68 L74 56 Z" fill="#7A3F1D" stroke="#3B2A1A" stroke-width="3.5" stroke-linejoin="round"/><path d="M38 62 L40 88 M50 62 V88 M62 62 L60 88" stroke="#5A2E14" stroke-width="3" stroke-linecap="round"/><path d="M16 58 C10 30 34 14 50 14 C66 14 90 30 84 58 Q50 68 16 58 Z" fill="#8B4E24" stroke="#3B2A1A" stroke-width="3.5" stroke-linejoin="round"/><path d="M26 40 C28 30 36 24 44 22" fill="none" stroke="#B8743C" stroke-width="4" stroke-linecap="round"/>'+f(52,40,1)+'</svg>'
+};
+var ICON = {
+ press:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v11M7 10l5 5 5-5M5 20h14"/></svg>',
+ down:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v14M6 12l6 6 6-6"/></svg>',
+ stir:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-3-6.2M20 4v4h-4"/></svg>',
+ flame:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3c1 4 5 5 5 10a5 5 0 0 1-10 0c0-2 1-3 2-4 0 2 1 2 2 2 0-3-1-5 1-8z"/></svg>',
+ smile:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 14c1 2 7 2 8 0M9 9v1M15 9v1"/></svg>'
+};
+var B1=bowl("#FFE27A","#E3B93C"), B2=bowl("#FFA94D","#E0842A"), WET=bowl("#F29A3A","#D17A20"), DRY=bowl("#B9794A","#8E5530"), BAT=bowl("#7A4526","#5A3016");
+var stepsStd = [
+ {tiles:[{a:A.banana,n:"3",u:"bananas",rep:3}],act:{i:"press",w:"Squish"},out:B1,kid:"Squish with a fork or potato masher.",adult:"Heat the oven to 350°F (175–180°C) and grease both muffin tins well. Peel the very ripe bananas into the bowl."},
+ {tiles:[{a:A.can,n:"1",u:"can pumpkin"},{a:A.pouch,n:"1",u:"applesauce"}],act:{i:"down",w:"Plop in"},out:B2,kid:"Scoop the pumpkin. Squeeze the packet.",adult:"Open the can. Check it says 100% pure pumpkin."},
+ {tiles:[{a:A.egg,n:"3",u:"eggs",rep:3},{a:A.milk,n:"½",u:"cup milk"},{a:A.oil,n:"½",u:"cup oil"},{a:A.vanilla,n:"1",u:"tbsp vanilla"}],act:{i:"stir",w:"Whisk"},out:WET,kid:"Pour the milk. Whisk, whisk, whisk.",adult:"Crack the eggs. Wash hands after touching raw egg."},
+ {tiles:[{a:A.flour,n:"3½",u:"cups flour"},{a:A.cocoa,n:"½",u:"cup cocoa"},{a:A.powder,n:"1",u:"tbsp baking powder"},{a:A.soda,n:"¾",u:"tsp baking soda"},{a:A.cinnamon,n:"1½",u:"tsp cinnamon"}],act:{i:"stir",w:"Stir"},out:DRY,kid:"Tip in the flour. Watch the cocoa puff.",adult:"Measure the powders into a second bowl. Hold it steady."},
+ {tiles:[{a:WET,n:"1",u:"wet bowl"},{a:DRY,n:"1",u:"dry bowl"}],act:{i:"stir",w:"Stir slow"},out:BAT,kid:"Stir slow like a turtle.",adult:"Pour dry into wet in two batches. Stop when no flour streaks. Runny? Add ¼ cup flour."},
+ {tiles:[{a:BAT,n:"24",u:"scoops"}],act:{i:"down",w:"Scoop"},out:tin("#7A4526"),kid:"Plop a scoop in each cup. Count them out loud.",adult:"A scant ¼ cup each, so cups are half full. Cups must be well greased."},
+ {tiles:[{a:A.oven,n:"350°",u:"F"},{a:A.clock,n:"16–20",u:"minutes"}],act:{i:"flame",w:"Bake"},out:A.muffin,kid:"Watch through the oven window and count.",adult:"Grown-ups only at the oven. A toothpick should come out clean. Want honey on top? That is the next step, done with 2 to 3 minutes left."},
+ {tiles:[{a:A.clock,n:"20",u:"minutes to cool"}],act:{i:"smile",w:"Yum"},out:A.muffin,kid:"Blow on a muffin, then take a bite.",adult:"Cool 5 minutes in the tin, then loosen with a butter knife. Cut into small pieces. Freeze the extras."}
+];
+A.flax='<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M26 28 H74 L78 86 Q78 92 72 92 H28 Q22 92 22 86 Z" fill="#E9D3A3" stroke="#3B2A1A" stroke-width="3.5" stroke-linejoin="round"/><path d="M26 28 L30 12 H70 L74 28 Z" fill="#C9A66B" stroke="#3B2A1A" stroke-width="3.5" stroke-linejoin="round"/><path d="M32 20 H68" stroke="#A8864A" stroke-width="3" stroke-dasharray="5 4"/>'+f(50,52,0.95)+'<g fill="#8A5A2B" stroke="#3B2A1A" stroke-width="1.2"><ellipse cx="38" cy="82" rx="2.6" ry="4" transform="rotate(-30 38 82)"/><ellipse cx="50" cy="84" rx="2.6" ry="4"/><ellipse cx="62" cy="82" rx="2.6" ry="4" transform="rotate(30 62 82)"/></g></svg>';
+A.water='<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M26 14 H74 L68 88 Q68 92 64 92 H36 Q32 92 32 88 Z" fill="#DDF1FF"/><path d="M29 40 H71 L68 88 Q68 92 64 92 H36 Q32 92 32 88 Z" fill="#6BB2F2"/><path d="M26 14 H74 L68 88 Q68 92 64 92 H36 Q32 92 32 88 Z" fill="none" stroke="#3B2A1A" stroke-width="3.5" stroke-linejoin="round"/><path d="M34 22 L36 36" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round"/>'+f(50,62,0.85)+'</svg>';
+var GLOOP=bowl("#D9C08A","#B89A5C");
+var stepsEgg = [
+ {tiles:[{a:A.flax,n:"3",u:"tbsp ground flax"},{a:A.water,n:"9",u:"tbsp water"}],act:{i:"stir",w:"Stir"},out:GLOOP,kid:"Stir the flax and water. Then wait and watch it get gloopy.",adult:"Mix in a small bowl and leave 5 to 10 minutes. 9 tbsp is 1/2 cup plus 1 tbsp. Heat the oven to 350°F (175–180°C) and grease both muffin tins well. Check every label for egg warnings."},
+ {tiles:[{a:A.banana,n:"3",u:"bananas",rep:3}],act:{i:"press",w:"Squish"},out:B1,kid:"Squish with a fork or potato masher.",adult:"Peel the very ripe bananas into the bowl."},
+ {tiles:[{a:A.can,n:"1",u:"can pumpkin"},{a:A.pouch,n:"1",u:"applesauce"}],act:{i:"down",w:"Plop in"},out:B2,kid:"Scoop the pumpkin. Squeeze the packet.",adult:"Open the can. Check it says 100% pure pumpkin."},
+ {tiles:[{a:GLOOP,n:"1",u:"flax gloop"},{a:A.milk,n:"½",u:"cup milk"},{a:A.oil,n:"½",u:"cup oil"},{a:A.vanilla,n:"1",u:"tbsp vanilla"}],act:{i:"stir",w:"Whisk"},out:WET,kid:"Pour the milk. Whisk, whisk, whisk.",adult:"Scrape the thickened flax into the bowl. Measure the oil and vanilla."},
+ {tiles:[{a:A.flour,n:"3½",u:"cups flour"},{a:A.cocoa,n:"½",u:"cup cocoa"},{a:A.powder,n:"1",u:"tbsp baking powder"},{a:A.soda,n:"¾",u:"tsp baking soda"},{a:A.cinnamon,n:"1½",u:"tsp cinnamon"}],act:{i:"stir",w:"Stir"},out:DRY,kid:"Tip in the flour. Watch the cocoa puff.",adult:"Measure the powders into a second bowl. Hold it steady."},
+ {tiles:[{a:WET,n:"1",u:"wet bowl"},{a:DRY,n:"1",u:"dry bowl"}],act:{i:"stir",w:"Stir slow"},out:BAT,kid:"Stir slow like a turtle.",adult:"Pour dry into wet in two batches. Stop when no flour streaks. The batter should be thick and scoopable. Runny? Add 2 tbsp flour."},
+ {tiles:[{a:BAT,n:"24",u:"scoops"}],act:{i:"down",w:"Scoop"},out:tin("#7A4526"),kid:"Plop a scoop in each cup. Count them out loud.",adult:"A scant ¼ cup each, so cups are half full. Cups must be well greased."},
+ {tiles:[{a:A.oven,n:"350°",u:"F"},{a:A.clock,n:"18–22",u:"minutes"}],act:{i:"flame",w:"Bake"},out:A.muffin,kid:"Watch through the oven window and count.",adult:"Grown-ups only at the oven. A toothpick should come out clean. Egg-free muffins bake a little longer. Want honey on top? That is the next step, done with 2 to 3 minutes left."},
+ {tiles:[{a:A.clock,n:"20",u:"minutes to cool"}],act:{i:"smile",w:"Yum"},out:A.muffin,kid:"Blow on a muffin, then take a bite.",adult:"Cool 5 minutes in the tin, then loosen with a butter knife. Cut into small pieces. Freeze the extras."}
+];
+A.chips='<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M24 24 H76 L80 86 Q80 92 74 92 H26 Q20 92 20 86 Z" fill="#E8453C" stroke="#3B2A1A" stroke-width="3.5" stroke-linejoin="round"/><path d="M24 24 L28 12 H72 L76 24 Z" fill="#B82E26" stroke="#3B2A1A" stroke-width="3.5" stroke-linejoin="round"/><path d="M28 18 H72" stroke="#7A1C16" stroke-width="3" stroke-dasharray="5 4"/>'+f(50,52,1)+'<g fill="#5A3416" stroke="#3B2A1A" stroke-width="1.4" stroke-linejoin="round"><path d="M35 86 L42 86 L38.5 79 Z"/><path d="M46 87 L53 87 L49.5 80 Z"/><path d="M58 86 L65 86 L61.5 79 Z"/></g></svg>';
+A.honey='<svg viewBox="0 0 100 100" aria-hidden="true"><rect x="26" y="26" width="48" height="62" rx="12" fill="#FFB627" stroke="#3B2A1A" stroke-width="3.5"/><rect x="31" y="12" width="38" height="18" rx="6" fill="#F28C28" stroke="#3B2A1A" stroke-width="3.5"/><rect x="32" y="38" width="7" height="30" rx="3.5" fill="#FFE08A"/>'+f(54,56,0.95)+'</svg>';
+A.muffinHoney=A.muffin.replace('</svg>','<path d="M28 31 C36 21 46 19 54 21 C62 19 72 23 76 31" fill="none" stroke="#FFC23A" stroke-width="4.5" stroke-linecap="round"/><path d="M33 30 C32 38 37 38 37 32 Z M70 29 C69 36 74 36 74 30 Z" fill="#FFC23A"/></svg>');
+var BATCHIP=BAT.replace('</svg>','<g fill="#2A1608" stroke="#F3E1B5" stroke-width="1"><circle cx="34" cy="45" r="2.6"/><circle cx="46" cy="48" r="2.6"/><circle cx="58" cy="42" r="2.6"/><circle cx="68" cy="46" r="2.6"/><circle cx="52" cy="44" r="2.6"/></g></svg>');
+var CHIPSTEP={opt:true,tiles:[{a:A.chips,n:"¾",u:"cup mini chips"}],act:{i:"down",w:"Sprinkle"},out:BATCHIP,kid:"Sprinkle the chips in. Skip this step if you want no chips.",adult:"Optional. Fold in mini chocolate chips gently. Cut muffins small for toddlers."};
+var HONEYSTEP={opt:true,tiles:[{a:A.honey,n:"2–3",u:"tbsp honey"},{a:A.clock,n:"2–3",u:"minutes left"}],act:{i:"down",w:"Drizzle"},out:A.muffinHoney,kid:"Watch from a safe spot and count down the last minutes.",adult:"Optional. With 2 to 3 minutes left, pull the rack out and brush or spoon a thin layer of honey on each muffin, then finish baking. Honey is not safe for babies under 12 months."};
+stepsStd.splice(7,0,HONEYSTEP);stepsStd.splice(5,0,CHIPSTEP);
+stepsEgg.splice(8,0,HONEYSTEP);stepsEgg.splice(6,0,CHIPSTEP);
+var sets={std:stepsStd,egg:stepsEgg};
+var recipe="std",tab="list";
+try{var st=localStorage.getItem("muffin-tab");if(st==="std"||st==="egg"||st==="list")tab=st;if(localStorage.getItem("muffin-recipe")==="egg")recipe="egg";}catch(e){}
+var steps=sets[recipe];
+var n=0;
+function loadStep(){n=0;try{var saved=parseInt(localStorage.getItem("muffin-step-"+recipe),10);if(saved>=0&&saved<steps.length)n=saved;}catch(e){}}
+loadStep();
+var dots=document.getElementById("dots");
+function buildDots(){dots.innerHTML="";steps.forEach(function(){dots.appendChild(document.createElement("span"));});}
+buildDots();
+var stage=document.getElementById("stage");
+function tileHTML(t){
+ var r=t.rep||1,size=r>1?72:112,pics='';
+ for(var i=0;i<r;i++){pics+='<div class="pic" style="width:'+size+'px;height:'+size+'px">'+t.a+'</div>';}
+ return '<div class="tile"><div class="row">'+pics+'</div><div class="num">'+t.n+'</div><div class="unit">'+(t.u||'')+'</div></div>';
+}
+function render(animate){
+ var s=steps[n],h='';
+ h+='<div class="tiles">'+s.tiles.map(tileHTML).join('')+'</div>';
+ h+='<div class="action"><div class="badge">'+ICON[s.act.i]+'</div><span class="word">'+s.act.w+'</span></div>';
+ if(s.out){h+='<div class="down">'+ICON.down+'</div><div class="out pic">'+s.out+'</div>';}
+ stage.innerHTML=h;
+ if(animate){stage.classList.remove("pop");void stage.offsetWidth;stage.classList.add("pop");}
+ document.getElementById("count").textContent="Step "+(n+1)+" of "+steps.length+(s.opt?" · optional":"");
+ document.getElementById("kid").textContent=s.kid;
+ document.getElementById("adult").textContent=s.adult;
+ for(var j=0;j<dots.children.length;j++){dots.children[j].className=j===n?"on":(j<n?"done":"");}
+ document.getElementById("next").textContent=n===steps.length-1?"Start over":"Next";
+ document.getElementById("back").style.visibility=n===0?"hidden":"visible";
+ try{localStorage.setItem("muffin-step-"+recipe,String(n));}catch(e){}
+}
+var awake=false;
+function keepAwake(){
+ if(awake)return;awake=true;
+ try{if(navigator.wakeLock){navigator.wakeLock.request("screen").catch(function(){});}}catch(e){}
+}
+function go(d){
+ if(tab==="list")return;
+ keepAwake();
+ if(d>0){n=(n+1)%steps.length;}else if(n>0){n--;}
+ render(true);
+ window.scrollTo(0,0);
+}
+document.getElementById("next").onclick=function(){go(1);};
+document.getElementById("back").onclick=function(){go(-1);};
+document.addEventListener("keydown",function(e){if(e.key==="ArrowRight")go(1);if(e.key==="ArrowLeft")go(-1);});
+var tx=null;
+document.addEventListener("touchstart",function(e){tx=e.touches[0].clientX;},{passive:true});
+document.addEventListener("touchend",function(e){if(tx===null)return;var dx=e.changedTouches[0].clientX-tx;tx=null;if(Math.abs(dx)>70){go(dx<0?1:-1);}},{passive:true});
+var tabs=document.querySelectorAll(".tab");
+var pantry=document.getElementById("pantry");
+var stepEls=["dots","count","stage","notes","bar"].map(function(id){return document.getElementById(id);});
+var WETLIST=[
+ {id:"banana",a:A.banana,amt:"3",name:"very ripe bananas"},
+ {id:"pumpkin",a:A.can,amt:"1 can (15 oz)",name:"100% pure pumpkin",note:"Not pumpkin pie filling"},
+ {id:"apple",a:A.pouch,amt:"1 packet",name:"applesauce",note:"Check the label for added sugar"},
+ {id:"milk",a:A.milk,amt:"½ cup",name:"milk"},
+ {id:"oil",a:A.oil,amt:"½ cup",name:"oil or melted butter",note:"Plus a little more to grease the tins"},
+ {id:"vanilla",a:A.vanilla,amt:"1 tbsp",name:"vanilla extract"}
+];
+var DRYLIST=[
+ {id:"flour",a:A.flour,amt:"3½ cups",name:"whole wheat flour"},
+ {id:"cocoa",a:A.cocoa,amt:"½ cup",name:"unsweetened cocoa powder"},
+ {id:"bp",a:A.powder,amt:"1 tbsp",name:"baking powder"},
+ {id:"soda",a:A.soda,amt:"¾ tsp",name:"baking soda"},
+ {id:"cin",a:A.cinnamon,amt:"1½ tsp",name:"cinnamon"}
+];
+var OPTLIST=[
+ {id:"chips",a:A.chips,amt:"¾ cup",name:"mini chocolate chips",note:"Optional. Mini chips are softer in a muffin"},
+ {id:"honey",a:A.honey,amt:"2–3 tbsp",name:"honey",note:"Optional. Only for children 12 months and older"}
+];
+var EGGLIST=[
+ {id:"eggs",a:A.egg,amt:"3",name:"eggs",note:"With eggs version"},
+ {id:"flax",a:A.flax,amt:"3 tbsp",name:"ground flaxseed",note:"Egg-free version"},
+ {id:"water",a:A.water,amt:"9 tbsp",name:"water",note:"Egg-free version (1/2 cup plus 1 tbsp)"}
+];
+function itemHTML(x){return '<li><label class="item" for="chk-'+x.id+'"><input type="checkbox" id="chk-'+x.id+'" data-id="'+x.id+'"><span class="thumb pic">'+x.a+'</span><span class="what"><span class="amt">'+x.amt+'</span><span class="name">'+x.name+'</span>'+(x.note?'<small>'+x.note+'</small>':'')+'</span></label></li>';}
+function groupHTML(t,arr){return '<h2 class="group">'+t+'</h2><ul class="list">'+arr.map(itemHTML).join('')+'</ul>';}
+pantry.innerHTML='<p class="lead">Gather everything first. Tap an item to check it off. Makes 24 muffins.</p>'
+ +groupHTML("Fresh and wet",WETLIST)+groupHTML("Dry",DRYLIST)+groupHTML("Eggs or flax, pick one",EGGLIST)+groupHTML("Optional extras",OPTLIST)
+ +'<div class="note adult equip"><b>You will also need</b><p>2 muffin tins (12 cups each), 2 large bowls, a whisk, a fork or potato masher, a 1/4-cup scoop, a butter knife and a toothpick. For the optional honey, a small spoon or pastry brush.</p></div>'
+ +'<div class="starts"><button class="start" id="start-std" type="button">Cook with eggs</button><button class="start alt" id="start-egg" type="button">Cook egg-free</button></div>';
+var checked={};
+try{checked=JSON.parse(localStorage.getItem("muffin-checked")||"{}")||{};}catch(e){checked={};}
+function mark(c){c.closest(".item").classList.toggle("done",c.checked);}
+pantry.querySelectorAll("input[type=checkbox]").forEach(function(c){
+ c.checked=!!checked[c.dataset.id];mark(c);
+ c.onchange=function(){checked[c.dataset.id]=c.checked;mark(c);try{localStorage.setItem("muffin-checked",JSON.stringify(checked));}catch(e){}};
+});
+function setTab(t,animate){
+ var isList=t==="list";
+ tab=t;
+ if(!isList){recipe=t;steps=sets[t];loadStep();buildDots();}
+ tabs.forEach(function(b){b.setAttribute("aria-selected",b.dataset.tab===t?"true":"false");});
+ pantry.hidden=!isList;
+ stepEls.forEach(function(el){el.hidden=isList;});
+ try{localStorage.setItem("muffin-tab",t);if(!isList)localStorage.setItem("muffin-recipe",t);}catch(e){}
+ if(!isList)render(animate);
+ if(animate)window.scrollTo(0,0);
+}
+tabs.forEach(function(b){b.onclick=function(){setTab(b.dataset.tab,true);};});
+document.getElementById("start-std").onclick=function(){setTab("std",true);};
+document.getElementById("start-egg").onclick=function(){setTab("egg",true);};
+setTab(tab,false);
+</script>
+</body>
+</html>
